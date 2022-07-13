@@ -125,37 +125,85 @@ const key = [201,127,6,149,29,164,83,181,23,2,115,92,244,206,178,80,20,119,95,3,
     ],
     AUCTIONEER
   )
-    
-  const sellerTradeState = await  anchor.web3.PublicKey.findProgramAddress(
-    [
-      Buffer.from('auction_house'),
-      publicKey.toBuffer(),
-      aH.toBuffer(),
-      associatedAddress.toBuffer(),
-      WRAPPED_SOL_MINT.toBuffer(),
-      mint.toBuffer(),
-      new BN(1000000000).toBuffer('le',8),
-      new BN (Math.ceil(1)).toBuffer('le',8),
-      
-    ],
-    AUCTION_HOUSE_PROGRAM_ID,
-  );
-  console.log(sellerTradeState[0].toBase58())
+  //  const tK =  (await connection.getLargestAccounts(mint)).value[0].address
+  //  console.log(tK.toBase58(),associatedAddress.toBase58())
 
-  const [freeTradeState, freeTradeBump] = await anchor.web3.PublicKey.findProgramAddress(
-    [
-      Buffer.from('auctioneer'),
-      wallet.publicKey.toBuffer(),
-      aH.toBuffer(),
-      associatedAddress.toBuffer(),
-      WRAPPED_SOL_MINT.toBuffer(),
-      mint.toBuffer(),
-      new BN (1).toBuffer('le',8),
-      new BN (10000000).toBuffer('le',8),
-    ],
-    AUCTION_HOUSE_PROGRAM_ID,
+  async function getAuctionHouseTradeState( 
+    auctionHouse, 
+    wallet, 
+    tokenAccount, 
+    treasuryMint, 
+    tokenMint, 
+    tokenSize, 
+    buyPrice 
+  ) { 
+    return await PublicKey.findProgramAddress( 
+      [ 
+        Buffer.from('auction_house'), 
+        wallet.toBuffer(), 
+        auctionHouse.toBuffer(), 
+        tokenAccount.toBuffer(), 
+        treasuryMint.toBuffer(), 
+        tokenMint.toBuffer(), 
+        new BN(buyPrice).toArrayLike(Buffer, "le", 8), 
+        new BN(tokenSize).toArrayLike(Buffer, "le", 8), 
+      ], 
+      AUCTION_HOUSE_PROGRAM_ID 
+    ); 
+  }
+
+  const [sellerTradeState, tradeBump] = await getAuctionHouseTradeState( 
+    aH, 
+    publicKey, 
+    associatedAddress, 
+    WRAPPED_SOL_MINT, 
+    mint, 
+    1, 
+    "18446744073709551615" 
   );
-  console.log(freeTradeState.toBase58(),freeTradeBump)
+  console.log("sell",sellerTradeState.toBase58())
+
+  // const sellerTradeState = await  anchor.web3.PublicKey.findProgramAddress(
+  //   [
+  //     Buffer.from('au'),
+  //     publicKey.toBuffer(),
+  //     aH.toBuffer(),
+  //     associatedAddress.toBuffer(),
+  //     WRAPPED_SOL_MINT.toBuffer(),
+  //     mint.toBuffer(),
+  //     new BN('18446744073709551615').toArrayLike(Buffer, "le", 8), 
+  //     new BN(1).toArrayLike(Buffer, "le", 8), 
+  //     // new BN('18446744073709551615').toBuffer('le',8),
+  //     // new BN(1).toBuffer('le',8),
+      
+  //   ],
+  //   AUCTION_HOUSE_PROGRAM_ID,
+  // );
+  // console.log(sellerTradeState[0].toBase58())
+  const [freeTradeState, freeTradeBump] = await getAuctionHouseTradeState( 
+    aH, 
+    publicKey, 
+    associatedAddress, 
+    WRAPPED_SOL_MINT, 
+    mint, 
+    1, 
+    "0" 
+  );
+
+  // const [freeTradeState, freeTradeBump] = await anchor.web3.PublicKey.findProgramAddress(
+  //   [
+  //     Buffer.from('auctioneer'),
+  //     wallet.publicKey.toBuffer(),
+  //     aH.toBuffer(),
+  //     associatedAddress.toBuffer(),
+  //     WRAPPED_SOL_MINT.toBuffer(),
+  //     mint.toBuffer(),
+  //     new BN (1).toBuffer('le',8),
+  //     new BN (10000000).toBuffer('le',8),
+  //   ],
+  //   AUCTION_HOUSE_PROGRAM_ID,
+  // );
+  // console.log(freeTradeState.toBase58(),freeTradeBump)
 
   const feePayer = await PublicKey.findProgramAddress([
     Buffer.from('auction_house'),
@@ -173,20 +221,20 @@ const key = [201,127,6,149,29,164,83,181,23,2,115,92,244,206,178,80,20,119,95,3,
   console.log(metadata[0].toBase58());
   
   
-      const [signer,signerBump] = await PublicKey.findProgramAddress([Buffer.from('auctioneer'), Buffer.from('signer')],
+      const [signer,signerBump] = await PublicKey.findProgramAddress([Buffer.from('auction_house'), Buffer.from('signer')],
       AUCTION_HOUSE_PROGRAM_ID);
 
-  // console.log(signer.toBase58(),signerBump)
+  console.log(signer.toBase58(),signerBump)
     const accounts =  {
     auctionHouseProgram: AUCTION_HOUSE_PROGRAM_ID,
     listingConfig: listingConfig[0],
     wallet: publicKey,
     tokenAccount: associatedAddress,
     metadata: metadata[0],
-    authority: publicKey,
+    authority: new PublicKey("4L3oWp4ANModX1TspSSetKsB8HUu2TiBpuqj5FGJonAh"),
     auctionHouse: aH,
     auctionHouseFeeAccount: feePayer[0],
-    sellerTradeState: sellerTradeState[0],
+    sellerTradeState: sellerTradeState,
     freeSellerTradeState: freeTradeState,
     auctioneerAuthority: auctioneerAuthority[0],
     ahAuctioneerPda: pda[0],
@@ -197,12 +245,12 @@ const key = [201,127,6,149,29,164,83,181,23,2,115,92,244,206,178,80,20,119,95,3,
     const auctioneerAuthorityBump = await auctioneer.AuctioneerAuthority.fromAccountAddress(connection,auctioneerAuthority[0])
 
     const args = {
-      tradeStateBump: sellerTradeState[1],
+      tradeStateBump: tradeBump,
       freeTradeStateBump: freeTradeBump,
       programAsSignerBump: signerBump,
       auctioneerAuthorityBump: 254,
       tokenSize: new BN(Math.ceil(1 * 1)),
-      startTime: 167534911,
+      startTime: 1657691565,
       endTime: 1677534999,
       reservePrice: 1,
       minBidIncrement: 1,
@@ -226,5 +274,11 @@ const key = [201,127,6,149,29,164,83,181,23,2,115,92,244,206,178,80,20,119,95,3,
       const Transact = await connection.confirmTransaction(signature, 'confirmed');
 
       console.log(Transact);
+
+//Bid
+
+
+
+
 }
 by();

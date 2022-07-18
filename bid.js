@@ -17,42 +17,22 @@ import auctioneer, {
     TOKEN_PROGRAM_ID,
     getMint,
   } from "@solana/spl-token";
+  import {TOKEN_METADATA_PROGRAM_ID,WRAPPED_SOL_MINT,AUCTION_HOUSE_PROGRAM_ID,AUCTIONEER} from "./constants.js";
+  import dotenv from "dotenv";
+dotenv.config();
 
   async function by() {
-    const sellerKey = [
-      201, 127, 6, 149, 29, 164, 83, 181, 23, 2, 115, 92, 244, 206, 178, 80, 20,
-      119, 95, 3, 204, 246, 101, 39, 167, 170, 218, 241, 99, 212, 157, 182, 143,
-      90, 61, 168, 156, 64, 146, 244, 233, 199, 175, 141, 157, 82, 105, 239, 106,
-      66, 192, 46, 179, 146, 240, 230, 249, 137, 89, 255, 64, 139, 2, 139,
-    ];
-  const buyerKey = [
-    51, 2, 34, 195, 173, 249, 234, 30, 34, 12, 67, 162, 12, 127, 33, 117, 228,
-    99, 104, 60, 105, 105, 181, 163, 158, 216, 91, 223, 183, 97, 176, 20, 49,
-    116, 67, 172, 8, 62, 193, 104, 116, 116, 93, 44, 37, 69, 192, 52, 244, 218,
-    171, 128, 127, 107, 188, 46, 106, 189, 22, 24, 50, 46, 218, 166,
-  ];
-  const connection = new Connection(clusterApiUrl("devnet"));
-  const seller = Keypair.fromSecretKey(await Uint8Array.from(sellerKey));
-  const buyer = Keypair.fromSecretKey(await Uint8Array.from(buyerKey));
-  // const mint = new PublicKey("3ay5NzcEVuVCfPzfjcnRiaYv8KbYNFEPuBGBJ3Mp4Y5u")
-  const mint = new PublicKey("HFZMyVbrVp9sw4aBJ9BP6RvSnqXmiSfR4LJfvTShUBa3");
-  const aH = new PublicKey("BnHNmwRwMHpjq9LBkvQYTkMGRAY4yuWcT5nnGhVq4SBr");
+    const sellerKey = [201,127,6,149,29,164,83,181,23,2,115,92,244,206,178,80,20,119,95,3,204,246,101,39,167,170,218,241,99,212,157,182,143,90,61,168,156,64,146,244,233,199,175,141,157,82,105,239,106,66,192,46,179,146,240,230,249,137,89,255,64,139,2,139]
 
-  const TOKEN_METADATA_PROGRAM_ID = new PublicKey(
-    "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
-  );
+    const buyerKey =[51,2,34,195,173,249,234,30,34,12,67,162,12,127,33,117,228,99,104,60,105,105,181,163,158,216,91,223,183,97,176,20,49,116,67,172,8,62,193,104,116,116,93,44,37,69,192,52,244,218,171,128,127,107,188,46,106,189,22,24,50,46,218,166]
 
-  const WRAPPED_SOL_MINT = new PublicKey(
-    "So11111111111111111111111111111111111111112"
-  );
+    const connection = new Connection(clusterApiUrl("devnet"));
+    const mint = new PublicKey(process.env.MINT);
+    const aH = new PublicKey(process.env.AH);
+    const seller = Keypair.fromSecretKey( Uint8Array.from(sellerKey));
+    const buyer = Keypair.fromSecretKey( Uint8Array.from(buyerKey));
+  
 
-  const AUCTION_HOUSE_PROGRAM_ID = new PublicKey(
-    "hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk"
-  );
-
-  const AUCTIONEER = new PublicKey(
-    "neer8g6yJq2mQM6KbnViEDAD4gr3gRZyMMf4F2p3MEh"
-  );
   const auctioneerAuthority = await PublicKey.findProgramAddress(
     [Buffer.from("auctioneer"), aH.toBuffer()],
     AUCTIONEER
@@ -117,7 +97,7 @@ import auctioneer, {
   console.log(buyerTradeState[0].toBase58())
 
   const buyArgs = {
-    tradeStateBump: buyerTradeState[1],
+  tradeStateBump: buyerTradeState[1],
   escrowPaymentBump: escrowPaymentAccount[1],
   auctioneerAuthorityBump: auctioneerAuthority[1],
   buyerPrice: 1000000000,
@@ -125,7 +105,7 @@ import auctioneer, {
   }
 
   const buyAccounts = {
-    auctionHouseProgram: AUCTION_HOUSE_PROGRAM_ID,
+  auctionHouseProgram: AUCTION_HOUSE_PROGRAM_ID,
   listingConfig: listingConfig[0],
   seller: seller.publicKey,
   wallet: buyer.publicKey,

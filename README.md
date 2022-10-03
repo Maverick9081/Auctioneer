@@ -27,5 +27,8 @@ npm install
 6.Execute Sale
 ```
 
+6. In order to create wallets and spl-tokens Use this guide.
+https://careful-narcissus-91d.notion.site/Solana-7cceb917bce44716a18b8a36e0a7d9bd
+
 DOCS : https://www.notion.so/Auctioneer-b0e7bb2dd4e74cf0abce24b69dd6eee4
       

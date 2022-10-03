@@ -1,25 +1,45 @@
 import auctioneer from "@metaplex-foundation/mpl-auctioneer";
+// import { createAuctioneerExecuteSaleInstruction } from "@metaplex-foundation/mpl-auction-house";
 import pack from "@solana/web3.js";
 const { Connection, clusterApiUrl, Keypair, PublicKey,Transaction } = pack
 import * as anchor from "@project-serum/anchor";
 import pkg from "@project-serum/anchor";
 const { BN } = pkg;
 import {getAssociatedTokenAddress,} from "@solana/spl-token";
-import {TOKEN_METADATA_PROGRAM_ID,WRAPPED_SOL_MINT,AUCTION_HOUSE_PROGRAM_ID,AUCTIONEER} from "./constants.js";
+import {TOKEN_METADATA_PROGRAM_ID,WRAPPED_SOL_MINT,AUCTION_HOUSE_PROGRAM_ID,AUCTIONEER,BUYERKEY,SELLERKEY, MINT, AH} from "./constants.js";
 import dotenv from "dotenv";
 dotenv.config();
+import { Metaplex } from "@metaplex-foundation/js";
+import fs, { readFileSync } from "fs"
 
-async function executeSale() {
 
-	const sellerKey = process.env.SELLER
+	// const idl =  readFileSync("./idl.json","utf8");
+	
+	const sellerKey = SELLERKEY
 
-    const buyerKey =process.env.BUYER
+    const buyerKey =BUYERKEY
 
 	const connection = new Connection(clusterApiUrl("devnet"));
 	const seller = Keypair.fromSecretKey( Uint8Array.from(sellerKey));
   	const buyer = Keypair.fromSecretKey( Uint8Array.from(buyerKey));
-  	const mint = new PublicKey(process.env.MINT);
-  	const aH = new PublicKey(process.env.AH);
+  	const mint = new PublicKey(MINT);
+  	const aH = new PublicKey(AH);
+	  const options = anchor.AnchorProvider.defaultOptions();
+	  const provider = new anchor.AnchorProvider(connection, buyer, options);
+
+	
+	  
+	
+	  const idl = await anchor.Program.fetchIdl(AUCTIONEER,provider);
+
+	//   console.log
+	  
+	  const program = await anchor.Program.at(
+		AUCTIONEER.toBase58(),
+		provider,
+	  );
+
+	  console.log(program)
 
   	const auctioneerAuthority =  await PublicKey.
 									findProgramAddress([Buffer.from('auctioneer'),
@@ -145,6 +165,28 @@ async function executeSale() {
   	const [signer,signerBump] = await PublicKey.findProgramAddress([Buffer.from('auction_house'), Buffer.from('signer')],
   																	AUCTION_HOUSE_PROGRAM_ID);
 
+	const ahTreasury = await PublicKey.findProgramAddress(
+		[
+			Buffer.from("auction_house"),
+			aH.toBuffer(),
+			Buffer.from("treasury"),
+		],
+		AUCTION_HOUSE_PROGRAM_ID
+		)
+
+		const metaplex = new Metaplex(connection);
+		let remainingAccounts = []
+		const nft = await metaplex.nfts().findByMint({ mintAddress : mint }).run();
+		
+		
+		
+		for (let i=0;i<nft.creators.length;i++){
+		  let creator ={pubkey: nft.creators[i] ,
+		  isWritable: true,
+		  isSigner: false}
+		  remainingAccounts.push(creator);
+		}
+
 
   	const executeSaleArgs = {
     	escrowPaymentBump: escrowPaymentAccount[1],
@@ -169,19 +211,22 @@ async function executeSale() {
   		escrowPaymentAccount:escrowPaymentAccount[0] ,
   		sellerPaymentReceiptAccount: seller.publicKey,
   		buyerReceiptTokenAccount: buyerAssociatedAccount,
-  		authority: new PublicKey("4L3oWp4ANModX1TspSSetKsB8HUu2TiBpuqj5FGJonAh"),
+  		authority: new PublicKey("2aPCrU8erdc7ZTQo3A1sZd3qpzzZ8FSQmyk8mij6Wgwb"),
   		auctionHouse: aH,
   		auctionHouseFeeAccount: feePayer[0],
-  		auctionHouseTreasury: new PublicKey("CB6WiXVsqDLQtZ6ZEdUVkGc7yFVB5nHiR7tEMiYePeDd"),
+  		auctionHouseTreasury: ahTreasury[0],
   		buyerTradeState: buyerTradeState[0],
   		sellerTradeState: sellerTradeState,
   		freeTradeState: freeTradeState,
   		auctioneerAuthority:auctioneerAuthority[0],
-  		ahAuctioneerPda: pda[0],
-  		programAsSigner: signer
+  		ahAuctioneerPda: pda[0],	
+  		programAsSigner: signer,
+		//   anchorRemainingAccounts : remainingAccounts
   	}
 
   	const executeSale = await auctioneer.createExecuteSaleInstruction(executeSaleAccounts,executeSaleArgs);
+
+	// executeSale.keys.push(remainingAccounts)
 
   	let tx = new Transaction();
     tx.add(executeSale);
@@ -195,7 +240,6 @@ async function executeSale() {
     console.log(Transact);
 
 
-  }
 
-executeSale();
+
   

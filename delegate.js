@@ -11,18 +11,18 @@ import pkkk from "@project-serum/anchor";
 const { BN } = pkkk;
 import {ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress ,TOKEN_PROGRAM_ID, getMint} from "@solana/spl-token";
 import pkgg,{ Metadata }from "@metaplex-foundation/mpl-token-metadata"
-import {TOKEN_METADATA_PROGRAM_ID,WRAPPED_SOL_MINT,AUCTION_HOUSE_PROGRAM_ID,AUCTIONEER} from "./constants.js";
+import {TOKEN_METADATA_PROGRAM_ID,WRAPPED_SOL_MINT,AUCTION_HOUSE_PROGRAM_ID,AUCTIONEER,SELLERKEY,MINT,AH} from "./constants.js";
 import dotenv from "dotenv";
 dotenv.config();
 
 async function by(){
 
-const key =[51,2,34,195,173,249,234,30,34,12,67,162,12,127,33,117,228,99,104,60,105,105,181,163,158,216,91,223,183,97,176,20,49,116,67,172,8,62,193,104,116,116,93,44,37,69,192,52,244,218,171,128,127,107,188,46,106,189,22,24,50,46,218,166]
+const key = SELLERKEY
 
     const connection = new Connection(clusterApiUrl("devnet"));
     const wallet =  Keypair.fromSecretKey(await Uint8Array.from(key));
-    const mint = new PublicKey(process.env.MINT);
-    const aH = new PublicKey(process.env.AH);
+    const mint = MINT
+    const aH = AH
     const publicKey = wallet.publicKey
 
     const auctioneerAuthority =  await PublicKey.findProgramAddress([Buffer.from('auctioneer'),
@@ -36,6 +36,7 @@ const key =[51,2,34,195,173,249,234,30,34,12,67,162,12,127,33,117,228,99,104,60,
                                                   ],
                                                   AUCTION_HOUSE_PROGRAM_ID
                                                   );
+  console.log("auctioneer",pda[0].toBase58())
 let delegateIns = {
     auctionHouse: aH,
     authority: publicKey,

@@ -237,4 +237,4 @@ const signature = await connection.sendRawTransaction(tx.serialize());
 
 const Transact = await connection.confirmTransaction(signature, "confirmed");
 
-console.log(Transact);
+console.log(signature);

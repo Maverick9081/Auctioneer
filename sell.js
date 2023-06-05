@@ -28,18 +28,13 @@ async function sell() {
   const aH = AH;
   const publicKey = wallet.publicKey;
 
-  const [auctioneerAuthority,bump] = await PublicKey.findProgramAddress(
+  const [auctioneerAuthority, bump] = await PublicKey.findProgramAddress(
     [Buffer.from("auctioneer"), aH.toBuffer()],
     AUCTIONEER
   );
 
-
   const pda = await PublicKey.findProgramAddress(
-    [
-      Buffer.from("auctioneer"),
-      aH.toBuffer(),
-      auctioneerAuthority.toBuffer(),
-    ],
+    [Buffer.from("auctioneer"), aH.toBuffer(), auctioneerAuthority.toBuffer()],
     AUCTION_HOUSE_PROGRAM_ID
   );
 
@@ -138,7 +133,6 @@ async function sell() {
     programAsSigner: signer,
   };
 
- 
   const args = {
     tradeStateBump: tradeBump,
     freeTradeStateBump: freeTradeBump,
@@ -163,9 +157,9 @@ async function sell() {
   tx.sign(wallet);
   const signature = await connection.sendRawTransaction(tx.serialize());
 
-  const Transact = await connection.confirmTransaction(signature, "confirmed");
+  await connection.confirmTransaction(signature, "confirmed");
 
-  console.log(Transact);
+  console.log(signature);
 }
 
 sell();

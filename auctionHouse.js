@@ -21,8 +21,6 @@ const feeWithdrawalDestination = wallet.publicKey;
 
 const treasuryMint = WRAPPED_SOL_MINT;
 
-const twdAta = await getAssociatedTokenAddress(treasuryMint, wallet.publicKey);
-
 const [auctionHouse, ahBump] = await PublicKey.findProgramAddress(
   [
     Buffer.from("auction_house"),
@@ -71,7 +69,7 @@ const args = {
   canChangeSalePrice: false,
 };
 
-const AH =  createCreateAuctionHouseInstruction(accounts, args);
+const AH = createCreateAuctionHouseInstruction(accounts, args);
 
 let ix = new Transaction();
 ix.add(AH);
@@ -82,5 +80,5 @@ ix.sign(wallet);
 
 const sign = await connection.sendRawTransaction(ix.serialize());
 
-const tra = await connection.confirmTransaction(sign, "confirmed");
-console.log(tra);
+await connection.confirmTransaction(sign, "confirmed");
+console.log(sign);

@@ -235,6 +235,6 @@ tx.feePayer = buyer.publicKey;
 tx.sign(buyer);
 const signature = await connection.sendRawTransaction(tx.serialize());
 
-const Transact = await connection.confirmTransaction(signature, "confirmed");
+await connection.confirmTransaction(signature, "confirmed");
 
 console.log(signature);
